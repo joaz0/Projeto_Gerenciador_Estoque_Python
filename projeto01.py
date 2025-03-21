@@ -119,11 +119,11 @@ def adicionar_item_saida():
     item_vet_saida = str(nome_ret.get())
     linha_saida += 1
  
-    if item_vet_saida in check:    
-        try :  
+    if item_vet_saida in str(rolagem_saida_checkbox.winfo_children()):    
+        try:
             label_saida = customtkinter.CTkLabel(rolagem_saida_selecao_itens, text=item_vet_saida)            
             label_saida.grid(row=linha_saida, column=0, pady=5, padx=5, sticky = "w")    
-            lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=imagem1, command=lambda: delete_itens_saida(label_saida, lixeira_saida))
+            lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=imagem1, command=lambda:delete_itens_saida(label_saida, lixeira_saida))
             lixeira_saida.grid(row=linha_saida, column=1, pady=5, padx=100, sticky = "e")
  
         except ValueError:
@@ -140,7 +140,7 @@ def adicionar_item_entrada():
     item_vet_entrada = str(nome_ent.get())
     linha_entrada += 1
  
-    if item_vet_entrada in itens_entrada_checkbox:    
+    if item_vet_entrada in rolagem_entrada_checkbox:    
         try :  
             label_entrada = customtkinter.CTkLabel(rolagem_entrada_selecao_itens, text=item_vet_entrada)            
             label_entrada.grid(row=linha_entrada, column=0, pady=5, padx=5, sticky = "w")    
@@ -244,16 +244,11 @@ def dados_edicao():
     recebe_dados = terminal_sql.fetchall()
     for item in rolagem_edicao.winfo_children():
         item.destroy()
-   
-    for i in recebe_dados:
-        nomes = str(i[0])
-        itens = []
-        itens.append(nomes)
         
-        for i in itens:
-            label_edicao_dados.configure(text=itens)
-            Box = customtkinter.CTkCheckBox(rolagem_edicao, text=itens, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB")
-            Box.pack(pady=5, padx=5, fill="x")
+    for item in recebe_dados:
+        Box = customtkinter.CTkCheckBox(rolagem_edicao, text=item, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=verificar_checkbox )
+        Box.pack(pady=5, padx=5, fill="x")
+
 
     BD.close()
 
@@ -266,15 +261,9 @@ def dados_saida():
     for item in rolagem_saida_checkbox.winfo_children():
         item.destroy()
 
-    for i in recebe_dados:
-        nomes = str(i[0])
-        itens = []
-        itens.append(nomes)
-
-        for i in itens:
-            label_saida_dados.configure(text=itens)
-            Box = customtkinter.CTkCheckBox(rolagem_saida_checkbox, text=itens, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB")
-            Box.pack(pady=5, padx=5, fill="x")
+    for item in recebe_dados:
+        Box = customtkinter.CTkCheckBox(rolagem_saida_checkbox, text=item, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB")
+        Box.pack(pady=5, padx=5, fill="x")
 
     BD.close()
 
@@ -287,21 +276,13 @@ def dados_entrada():
     for item in rolagem_entrada_checkbox.winfo_children():
         item.destroy()
 
-    for i in recebe_dados:
-        nomes = str(i[0])
-        itens = []
-        itens.append(nomes)
-
-        for i in itens:
-            label_saida_dados.configure(text=itens)
-            Box = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=itens, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB")
-            Box.pack(pady=5, padx=5, fill="x")
-
+    for item in recebe_dados:
+        box_edit = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=item, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", command=selecionar_itens_edicao)
+        box_edit.pack(pady=5, padx=5, fill="x")
     BD.close()
+    print(recebe_dados)
 
 
-criar_banco()
- 
 customtkinter.set_appearance_mode('dark')
 customtkinter.set_default_color_theme('blue')
  
@@ -478,7 +459,7 @@ preco_saida.grid(row=4,column=1, pady=2, padx=5, sticky="w")
 
 #botões do frame saida
  
-botao_add_item_saida = customtkinter.CTkButton(quadro_saida, text="Adicionar item", text_color="black", width=110, fg_color="#83A2EB", command= adicionar_item_saida, corner_radius= 30)
+botao_add_item_saida = customtkinter.CTkButton(quadro_saida, text="Adicionar item", text_color="black", width=110, fg_color="#83A2EB", command=adicionar_item_saida, corner_radius= 30)
 botao_add_item_saida.grid(row=4, column=1, columnspan=2, pady=6, sticky="e") 
  
 botao_cancel_saida = customtkinter.CTkButton(quadro_saida, text="Cancelar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
