@@ -24,6 +24,7 @@ def tela_cadastro():
     quadro_relatorio_estoque.grid_forget()
     quadro_relatorio_entrada.grid_forget()
     quadro_relatorio_saida.grid_forget()
+    limpar_campos_saida()
  
 def tela_edicao():
     quadro_edicao.grid(row=0 , column=1, pady=5, padx=5)
@@ -36,6 +37,7 @@ def tela_edicao():
     quadro_relatorio_entrada.grid_forget()
     quadro_relatorio_saida.grid_forget()
     dados_edicao()
+    limpar_campos_saida()
 
 def tela_saida():
     quadro_saida.grid(row=0 , column=1, pady=5, padx=5)
@@ -47,8 +49,10 @@ def tela_saida():
     quadro_relatorio_estoque.grid_forget()
     quadro_relatorio_entrada.grid_forget()
     quadro_relatorio_saida.grid_forget()
+    limpar_campos_edicao()
+    limpar_campos_entrada()   
     dados_saida()
-
+ 
 def tela_entrada():
     quadro_entrada.grid(row=0 , column=1, pady=5, padx=5)
     quadro_entrada.grid_propagate(False)
@@ -60,6 +64,9 @@ def tela_entrada():
     quadro_relatorio_entrada.grid_forget()
     quadro_relatorio_saida.grid_forget()
     dados_entrada()
+    limpar_campos_edicao()
+    limpar_campos_entrada()
+    limpar_campos_saida()
 
 def tela_relatorio() :
     quadro_relatorio_estoque.grid(row=0 , column=1, pady=5, padx=5)
@@ -70,7 +77,10 @@ def tela_relatorio() :
     quadro_edicao.grid_forget()
     quadro_relatorio_entrada.grid_forget()
     quadro_relatorio_saida.grid_forget()
+    limpar_campos_edicao()
+    limpar_campos_entrada()
     ler_dados_cadastro()
+    limpar_campos_saida()
 
 def esconder_relatorio_entrada_saida():
     quadro_relatorio_estoque.grid(row=0 , column=1, pady=5, padx=5)
@@ -159,7 +169,7 @@ def export():
 def criar_banco():
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("CREATE TABLE IF NOT EXISTS Produtos (nomes text, quantidade integer, precos float, desc text)")
+    terminal_sql.execute("CREATE TABLE IF NOT EXISTS Produtos (nomes text, quantidade integer, precos real, desc text)")
     BD.commit()
     BD.close()
 
@@ -168,10 +178,10 @@ def salvar_cadastro():
     BD = sqlite3.connect("BD_GRE.db")
     nome_cadastro = entrada_nome_produto.get()
     preco_cadastro = entrada_preco.get()
-    quant_cadastro = "0"
+    quant_cadastro = 0
     desc_cadastro = textbox_desc.get("1.0", "end")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("INSERT INTO produtos VALUES ('"+nome_cadastro+"', '"+quant_cadastro+"', '"+preco_cadastro+"', '"+desc_cadastro+"')")
+    terminal_sql.execute("INSERT INTO produtos VALUES ('"+nome_cadastro+"', '"+str(quant_cadastro)+"', '"+str(preco_cadastro)+"', '"+desc_cadastro+"')")
     entrada_nome_produto.delete(0, "end")
     entrada_preco.delete(0, "end")
     textbox_desc.delete("1.0", "end")
