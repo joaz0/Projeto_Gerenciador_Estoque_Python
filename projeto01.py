@@ -209,7 +209,6 @@ def ler_dados_cadastro():
 
 ##--------------------------------------------------------------------------comandos Edicao------------------------------------------------------------------##
 def dados_edicao():
-    global checkbox_selecionado  # Acessa a variável global
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     terminal_sql.execute("SELECT nomes FROM Produtos")
@@ -220,7 +219,7 @@ def dados_edicao():
     for item in recebe_dados:
         nome_produto = item[0]
 
-        # Cria uma variável individual para cada checkbox
+        # variável unica para cada checkbox
         var_checkbox = customtkinter.BooleanVar(value=False)
 
         Box_edicao = customtkinter.CTkCheckBox(rolagem_edicao, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_edicao(n, v))
@@ -234,10 +233,9 @@ def checkbox_event_edicao(nome_produto, var_checkbox):
     if var_checkbox.get(): 
         if checkbox_selecionado and checkbox_selecionado != var_checkbox:
             checkbox_selecionado.set(False)
-
+            
         checkbox_selecionado = var_checkbox
         item_selecionado = nome_produto
-
         preencher_campos_edicao(nome_produto)
     else:  
         limpar_campos_edicao()
@@ -265,6 +263,8 @@ def limpar_campos_edicao():
     editar_nome.delete(0, "end")
     editar_preco.delete(0, "end")
     editar_desc.delete("1.0", "end")
+
+
 def salvar_edicao():
     global item_selecionado
 
@@ -374,21 +374,21 @@ def checkbox_event_saida(nome_produto, var_checkbox):
 def preencher_campos_saida(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("SELECT nomes, precos FROM Produtos WHERE nomes = ?", (nome_produto,))
+    terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
     dados_produto = terminal_sql.fetchone()
 
     if dados_produto:
         nome_saida.delete(0, "end")
         nome_saida.insert(0, dados_produto[0])
         
-        preco_saida.delete(0, "end")
-        preco_saida.insert(0, dados_produto[1])
+        quant_saida.delete(0, "end")
+        quant_saida.insert(0, dados_produto[1])
 
     BD.close()
     
 def limpar_campos_saida():
     nome_saida.delete(0, "end")
-    preco_saida.delete(0, "end")
+    quant_saida.delete(0, "end")
 
 def pesquisar_produto_saida(event=None):
     global item_selecionado, checkbox_selecionado
@@ -428,7 +428,7 @@ def cancelar_saida():
     global linha_saida
     linha_saida = 0
     nome_saida.delete(0, "end")
-    preco_saida.delete(0, "end")
+    quant_saida.delete(0, "end")
     for item in rolagem_saida_selecao_itens.winfo_children():
         item.destroy()
 
@@ -474,20 +474,20 @@ def checkbox_event_entrada(nome_produto, var_checkbox):
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("SELECT nomes, precos FROM Produtos WHERE nomes = ?", (nome_produto,))
+    terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
     dados_produto = terminal_sql.fetchone()
 
     if dados_produto:
         nome_ent.delete(0, "end")
         nome_ent.insert(0, dados_produto[0])
         
-        preco_entrada.delete(0, "end")
-        preco_entrada.insert(0, dados_produto[1])
+        quant_entrada.delete(0, "end")
+        quant_entrada.insert(0, dados_produto[1])
     BD.close()
 
 def limpar_campos_entrada():
     nome_ent.delete(0, "end")
-    preco_entrada.delete(0, "end")
+    quant_entrada.delete(0, "end")
 
 def pesquisar_produto_entrada(event=None):
     global item_selecionado, checkbox_selecionado
@@ -523,7 +523,7 @@ def cancelar_entrada():
     global linha_entrada
     linha_entrada = 0
     nome_ent.delete(0, "end")
-    preco_entrada.delete(0, "end")
+    quant_entrada.delete(0, "end")
     for item in rolagem_entrada_selecao_itens.winfo_children():
         item.destroy()
 
@@ -700,8 +700,8 @@ nome_saida.grid(row=3, column=1, pady=2, padx=5, sticky="w")
 nome_quant_estoque = customtkinter.CTkLabel(quadro_saida, text="produtos em estoque: 1")
 nome_quant_estoque.grid(row=2, column=1, padx=5, sticky="n")
  
-preco_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="0.00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
-preco_saida.grid(row=4,column=1, pady=2, padx=5, sticky="w")
+quant_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
+quant_saida.grid(row=4,column=1, pady=2, padx=5, sticky="w")
 
 ##-----------------------------------------------------------------------botões do frame saida--------------------------------------------------------------------##
 
@@ -742,8 +742,8 @@ nome_ent.grid(row=3, column=1,pady=2 , padx=5, sticky="w")
 nome_quant_estoque_entrada = customtkinter.CTkLabel(quadro_entrada, text="produtos em estoque: 1")
 nome_quant_estoque_entrada.grid(row=2, column=1, padx=5, sticky="n")
 
-preco_entrada = customtkinter.CTkEntry(quadro_entrada, placeholder_text="0.00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
-preco_entrada.grid(row=4,column=1,pady=2 , padx=5, sticky="w")
+quant_entrada = customtkinter.CTkEntry(quadro_entrada, placeholder_text="00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
+quant_entrada.grid(row=4,column=1,pady=2 , padx=5, sticky="w")
 
 ##-----------------------------------------------------------------------botões do frame entrada--------------------------------------------------------------------##
 botao_add_item_entrada = customtkinter.CTkButton(quadro_entrada, text="Adicionar item", text_color="black", width=110, fg_color="#83A2EB", command= adicionar_item_entrada, corner_radius= 30)
