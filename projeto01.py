@@ -221,26 +221,26 @@ def dados_edicao():
 
         # variável unica para cada checkbox
         var_checkbox = customtkinter.BooleanVar(value=False)
-
         Box_edicao = customtkinter.CTkCheckBox(rolagem_edicao, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_edicao(n, v))
         Box_edicao.pack(pady=5, padx=5, fill="x")
 
     BD.close()
 
 def checkbox_event_edicao(nome_produto, var_checkbox):
-    global checkbox_selecionado, item_selecionado
+    global checkbox_anterior, item_selecionado
 
-    if var_checkbox.get(): 
-        if checkbox_selecionado and checkbox_selecionado != var_checkbox:
-            checkbox_selecionado.set(False)
-            
-        checkbox_selecionado = var_checkbox
-        item_selecionado = nome_produto
-        preencher_campos_edicao(nome_produto)
+    if checkbox_anterior != var_checkbox:
+        if checkbox_anterior == checkbox_anterior:
+            pass
+        else:
+            checkbox_anterior.set(False)
+            checkbox_anterior = var_checkbox
     else:  
         limpar_campos_edicao()
         item_selecionado = None
-        checkbox_selecionado = None
+        checkbox_anterior = None
+    item_selecionado = nome_produto
+    preencher_campos_edicao(nome_produto)
 
 def preencher_campos_edicao(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
@@ -321,7 +321,7 @@ def deletar_edicao():
 
 
 def pesquisar_produto_edicao(event=None):
-    global item_selecionado, checkbox_selecionado
+    global item_selecionado
     var_nome = pesquisar_edicao.get()
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
@@ -357,19 +357,18 @@ def dados_saida():
     BD.close()
 
 def checkbox_event_saida(nome_produto, var_checkbox):
-    global checkbox_selecionado, item_selecionado
+    global checkbox_anterior, item_selecionado
 
-    if var_checkbox.get(): 
-        if checkbox_selecionado and checkbox_selecionado != var_checkbox:
-            checkbox_selecionado.set(False)
-        checkbox_selecionado = var_checkbox
-        item_selecionado = nome_produto
-        preencher_campos_saida(nome_produto)
+    if checkbox_anterior != var_checkbox:
+        checkbox_anterior.set(False)
+        checkbox_anterior = var_checkbox
 
-    if not var_checkbox.get():  
+    else:  
         limpar_campos_saida()
         item_selecionado = None
-        checkbox_selecionado = None
+        checkbox_anterior = None
+    item_selecionado = nome_produto
+    preencher_campos_saida(nome_produto)
 
 def preencher_campos_saida(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
@@ -456,20 +455,17 @@ def dados_entrada():
     BD.close()
 
 def checkbox_event_entrada(nome_produto, var_checkbox):
-    global checkbox_selecionado, item_selecionado
+    global checkbox_anterior, item_selecionado
 
-    if var_checkbox.get(): 
-        if checkbox_selecionado and checkbox_selecionado != var_checkbox:
-            checkbox_selecionado.set(False)
-
-        checkbox_selecionado = var_checkbox
-        item_selecionado = nome_produto
-
-        preencher_campos_entrada(nome_produto)
+    if checkbox_anterior != var_checkbox:
+        checkbox_anterior.set(False)
+        checkbox_anterior = var_checkbox
     else:  
         limpar_campos_entrada()
         item_selecionado = None
-        checkbox_selecionado = None
+        checkbox_anterior = None
+    item_selecionado = nome_produto
+    preencher_campos_entrada(nome_produto)
 
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
@@ -539,7 +535,7 @@ janela =customtkinter.CTk()
 janela.title("Gerenciamento")
 janela.geometry('800x410')
 
-checkbox_selecionado = customtkinter.BooleanVar()  # Armazena o checkbox atualmente selecionado
+checkbox_anterior = customtkinter.BooleanVar()  # Armazena o checkbox atualmente selecionado
 
 style = ttk.Style(master=janela)
 style.theme_use('clam')

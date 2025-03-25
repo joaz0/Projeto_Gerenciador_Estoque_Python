@@ -173,11 +173,7 @@ def criar_banco():
     BD.commit()
     BD.close()
 
-<<<<<<< HEAD
 ##--------------------------------------------------------------------------Comandos Cadastro------------------------------------------------------------------##
-=======
-##--------------------------------------------------------------------------comandos Cadastro------------------------------------------------------------------##
->>>>>>> dc9f095d1d6c0e3669de9db9b289d99681a2a354
 def salvar_cadastro():
     BD = sqlite3.connect("BD_GRE.db")
     nome_cadastro = entrada_nome_produto.get()
@@ -855,8 +851,5 @@ botao_saida_da_saida.grid(row=3, column=3, pady=5, padx=5, sticky="w")
 botao_exportar_saida = customtkinter.CTkButton(quadro_relatorio_saida, text="Exportar", text_color="black", width=110, fg_color="#83A2EB", corner_radius= 30, command=export)
 botao_exportar_saida.grid(row=1, column=3, pady=5, padx=5, sticky="w", columnspan=2)
 
-<<<<<<< HEAD
+
 janela.mainloop()
-=======
-janela.mainloop()
->>>>>>> dc9f095d1d6c0e3669de9db9b289d99681a2a354
