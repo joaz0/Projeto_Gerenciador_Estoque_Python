@@ -219,44 +219,42 @@ def dados_edicao():
     for item in recebe_dados:
         nome_produto = item[0]
 
-        # variável unica para cada checkbox
         var_checkbox = customtkinter.BooleanVar(value=False)
+        
         Box_edicao = customtkinter.CTkCheckBox(rolagem_edicao, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_edicao(n, v))
         Box_edicao.pack(pady=5, padx=5, fill="x")
 
     BD.close()
 
 def checkbox_event_edicao(nome_produto, var_checkbox):
-    global checkbox_anterior, item_selecionado
+    global checkbox_anterior
 
     if checkbox_anterior != var_checkbox:
-        if checkbox_anterior == checkbox_anterior:
-            pass
-        else:
-            checkbox_anterior.set(False)
+        preencher_campos_edicao(nome_produto)
+        if checkbox_anterior is not None:
+            checkbox_anterior.set(0)
             checkbox_anterior = var_checkbox
-    else:  
-        limpar_campos_edicao()
-        item_selecionado = None
-        checkbox_anterior = None
-    item_selecionado = nome_produto
-    preencher_campos_edicao(nome_produto)
+    else:
+        checkbox_anterior = var_checkbox
+        preencher_campos_edicao(nome_produto)
+    
+
 
 def preencher_campos_edicao(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     terminal_sql.execute("SELECT nomes, precos, desc FROM Produtos WHERE nomes = ?", (nome_produto,))
     dados_produto = terminal_sql.fetchone()
-
-    if dados_produto:
-        editar_nome.delete(0, "end")
-        editar_nome.insert(0, dados_produto[0])
-        
-        editar_preco.delete(0, "end")
-        editar_preco.insert(0, dados_produto[1])
     
-        editar_desc.delete("1.0", "end")
-        editar_desc.insert("1.0", dados_produto[2])
+    editar_nome.delete(0, "end")
+    editar_nome.insert(0, dados_produto[0])
+    
+    editar_preco.delete(0, "end")
+    editar_preco.insert(0, dados_produto[1])
+
+    editar_desc.delete("1.0", "end")
+    editar_desc.insert("1.0", dados_produto[2])
+    
     BD.close()
 
 def limpar_campos_edicao():
@@ -264,44 +262,33 @@ def limpar_campos_edicao():
     editar_preco.delete(0, "end")
     editar_desc.delete("1.0", "end")
 
-
 def salvar_edicao():
     global item_selecionado
+    BD = sqlite3.connect("BD_GRE.db")
+    terminal_sql = BD.cursor()
+    nome_edit = editar_nome.get()
+    preco_edit = editar_preco.get()
+    desc_edit = editar_desc.get("1.0", "end")
+    terminal_sql.execute("UPDATE Produtos SET nomes = ?, precos = ?, desc = ? WHERE nomes = ?", (nome_edit, preco_edit, desc_edit, item_selecionado))
+    BD.commit()
+    BD.close()
+    editar_nome.delete(0, "end")
+    editar_preco.delete(0, "end")
+    editar_desc.delete("1.0", "end")
 
-    if item_selecionado:
-        BD = sqlite3.connect("BD_GRE.db")
-        terminal_sql = BD.cursor()
-        nome_edit = editar_nome.get()
-        preco_edit = editar_preco.get()
-        desc_edit = editar_desc.get("1.0", "end")
-        terminal_sql.execute("UPDATE Produtos SET nomes = ?, precos = ?, desc = ? WHERE nomes = ?",(nome_edit, preco_edit, desc_edit, item_selecionado))
-        BD.commit() 
-        BD.close()
-
-        editar_nome.delete(0, "end")
-        editar_preco.delete(0, "end")
-        editar_desc.delete("1.0", "end")
-
-        dados_edicao()
-        ler_dados_cadastro()
-        item_selecionado = None
-    else:
-        popup = customtkinter.CTkMessage(master=janela, text="Nenhum item selecionado para edição.", text_color="#8684EB", fg_color="#83A2EB", corner_radius=30)
-        popup.show()
-
-def cancelar_edicao():
-    global item_selelecionado
-    item_selecionado = None
-    limpar_campos_edicao()
     dados_edicao()
     ler_dados_cadastro()
+    item_selecionado = None
+        
+def cancelar_edicao():
+    limpar_campos_edicao()
+
 
 def deletar_edicao():
     global item_selecionado
-    if item_selecionado:  # Verifica se um item foi selecionado
+    if item_selecionado:
         BD = sqlite3.connect("BD_GRE.db")
         terminal_sql = BD.cursor()
-        # Exclui o produto do banco de dados
         terminal_sql.execute("DELETE FROM Produtos WHERE nomes = ?", (item_selecionado,))
         BD.commit() 
         BD.close()
@@ -309,15 +296,9 @@ def deletar_edicao():
         editar_preco.delete(0, "end")
         editar_desc.delete("1.0", "end")
 
-        # Atualiza a interface
         dados_edicao()
         ler_dados_cadastro()
-
-        # Reseta o item selecionado
         item_selecionado = None
-    else:
-        popup = customtkinter.CTkMessage(master=janela, text="Nenhum item selecionado para remoção.", text_color="#8684EB", fg_color="#83A2EB", corner_radius=30)
-        popup.show()
 
 
 def pesquisar_produto_edicao(event=None):
@@ -357,37 +338,33 @@ def dados_saida():
     BD.close()
 
 def checkbox_event_saida(nome_produto, var_checkbox):
-    global checkbox_anterior, item_selecionado
-
+    global checkbox_anterior
     if checkbox_anterior != var_checkbox:
-        checkbox_anterior.set(False)
+        preencher_campos_saida(nome_produto)
+        if checkbox_anterior is not None:
+            checkbox_anterior.set(0)
+            checkbox_anterior = var_checkbox
+    else:
         checkbox_anterior = var_checkbox
-
-    else:  
-        limpar_campos_saida()
-        item_selecionado = None
-        checkbox_anterior = None
-    item_selecionado = nome_produto
-    preencher_campos_saida(nome_produto)
+        preencher_campos_saida(nome_produto)
+    nome_saida.configure(state='disabled')
+        
+    
 
 def preencher_campos_saida(nome_produto):
+    global nome_saida
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_produto = terminal_sql.fetchone()
+    dados_produto = str(terminal_sql.fetchall()).strip("()[]'")
 
-    if dados_produto:
-        nome_saida.delete(0, "end")
-        nome_saida.insert(0, dados_produto[0])
+    nome_saida.delete(0, "end")
+    nome_saida.insert(0,dados_produto)
         
-        quant_saida.delete(0, "end")
-        quant_saida.insert(0, dados_produto[1])
-
     BD.close()
     
 def limpar_campos_saida():
     nome_saida.delete(0, "end")
-    quant_saida.delete(0, "end")
 
 def pesquisar_produto_saida(event=None):
     global item_selecionado, checkbox_selecionado
@@ -446,8 +423,6 @@ def dados_entrada():
 
     for item in recebe_dados:
         nome_produto = item[0]
-
-        # Cria uma variável individual para cada checkbox
         var_checkbox = customtkinter.BooleanVar(value=False)
 
         Box_entrada = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_entrada(n, v))
@@ -455,30 +430,26 @@ def dados_entrada():
     BD.close()
 
 def checkbox_event_entrada(nome_produto, var_checkbox):
-    global checkbox_anterior, item_selecionado
-
+    global checkbox_anterior
     if checkbox_anterior != var_checkbox:
-        checkbox_anterior.set(False)
+        preencher_campos_entrada(nome_produto)
+        if checkbox_anterior is not None:
+            checkbox_anterior.set(0)
+            checkbox_anterior = var_checkbox
+    else:
         checkbox_anterior = var_checkbox
-    else:  
-        limpar_campos_entrada()
-        item_selecionado = None
-        checkbox_anterior = None
-    item_selecionado = nome_produto
-    preencher_campos_entrada(nome_produto)
+        preencher_campos_entrada(nome_produto)
+    nome_ent.configure(state='disabled')
 
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_produto = terminal_sql.fetchone()
+    dados_produto = str(terminal_sql.fetchall()).strip("()[]'")
 
-    if dados_produto:
-        nome_ent.delete(0, "end")
-        nome_ent.insert(0, dados_produto[0])
+    nome_ent.delete(0, "end")
+    nome_ent.insert(0,dados_produto)
         
-        quant_entrada.delete(0, "end")
-        quant_entrada.insert(0, dados_produto[1])
     BD.close()
 
 def limpar_campos_entrada():
