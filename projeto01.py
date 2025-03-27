@@ -7,7 +7,7 @@ import sqlite3
 
  
 file_path = os.path.dirname(os.path.realpath(__file__))
-imagem1 = customtkinter.CTkImage(Image.open(fp="C:/Users/970973/OneDrive - SENAC em Minas - EDU\Documentos/atv_commit/UC5/UC5_Exercicios/Projetos/image/lixeira 1.png"), size=(35,35))
+imagem1 = customtkinter.CTkImage(Image.open(fp="C:/Users/joazr/Downloads/Projetos_senac/lixeira/lixeira 1.png"), size=(35,35))
 item_vet = 0
 linha_entrada = 0
 linha_saida = 0
@@ -178,10 +178,10 @@ def salvar_cadastro():
     BD = sqlite3.connect("BD_GRE.db")
     nome_cadastro = entrada_nome_produto.get()
     preco_cadastro = entrada_preco.get()
-    quant_cadastro = 0
+    quant_cadastro = "0"
     desc_cadastro = textbox_desc.get("1.0", "end")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("INSERT INTO produtos VALUES ('"+nome_cadastro+"', '"+str(quant_cadastro)+"', '"+str(preco_cadastro)+"', '"+desc_cadastro+"')")
+    terminal_sql.execute("INSERT INTO produtos VALUES ('"+nome_cadastro+"', '"+quant_cadastro+"', '"+preco_cadastro+"', '"+desc_cadastro+"')")
     entrada_nome_produto.delete(0, "end")
     entrada_preco.delete(0, "end")
     textbox_desc.delete("1.0", "end")
@@ -312,8 +312,8 @@ def pesquisar_produto_edicao(event=None):
         item.destroy()
 
     for item in recebe_pesquisa:
-        item_selecionado = item[0]
         var_checkbox = customtkinter.BooleanVar(value=False)
+
         Box_edicao = customtkinter.CTkCheckBox(rolagem_edicao, text=item[0], text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=item[0], v=var_checkbox: checkbox_event_edicao(n, v))
         Box_edicao.pack(pady=5, padx=5, fill="x")
     BD.close()
@@ -330,7 +330,7 @@ def dados_saida():
     for item in recebe_dados:
         nome_produto = item[0]
 
-        # Cria uma variável individual para cada checkbox
+
         var_checkbox = customtkinter.BooleanVar(value=False)
 
         Box = customtkinter.CTkCheckBox(rolagem_saida_checkbox, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_saida(n, v))
@@ -339,29 +339,32 @@ def dados_saida():
 
 def checkbox_event_saida(nome_produto, var_checkbox):
     global checkbox_anterior
+
     if checkbox_anterior != var_checkbox:
         preencher_campos_saida(nome_produto)
+
         if checkbox_anterior is not None:
             checkbox_anterior.set(0)
+            nome_saida.configure(state='normal')
             checkbox_anterior = var_checkbox
     else:
-        checkbox_anterior = var_checkbox
+        nome_saida.configure(state='normal')
         preencher_campos_saida(nome_produto)
-    nome_saida.configure(state='disabled')
-        
-    
+        checkbox_anterior.set(0)
+
 
 def preencher_campos_saida(nome_produto):
     global nome_saida
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_produto = str(terminal_sql.fetchall()).strip("()[]'")
-
-    nome_saida.delete(0, "end")
-    nome_saida.insert(0,dados_produto)
-        
+    terminal_sql.execute("SELECT nomes FROM Produtos WHERE nomes = ?", (nome_produto,))
+    dados_nome = str(terminal_sql.fetchall()).strip("()[]'',")
+    terminal_sql.execute("SELECT quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
+    dados_quantidade = str(terminal_sql.fetchall()).strip("()[]',")
     BD.close()
+    
+    nome_saida.delete(0, "end")
+    nome_saida.insert(0, f"{dados_nome} - {dados_quantidade} Itens em estoque")
     
 def limpar_campos_saida():
     nome_saida.delete(0, "end")
@@ -397,8 +400,11 @@ def adicionar_item_saida():
         return  
 
 def salvar_saida():
+    BD = sqlite3.connect("BD_GRE.db")
+    terminal_sql = BD.cursor()
+    terminal_sql.execute("SELECT quantidade FROM Produtos WHERE nomes = ?", (nome_saida.get(),))
+    quantidade_da_saida = terminal_sql.fetchall()
     pass
-
 
 def cancelar_saida():
     global linha_saida
@@ -439,16 +445,19 @@ def checkbox_event_entrada(nome_produto, var_checkbox):
     else:
         checkbox_anterior = var_checkbox
         preencher_campos_entrada(nome_produto)
-    nome_ent.configure(state='disabled')
+
 
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_produto = str(terminal_sql.fetchall()).strip("()[]'")
-
+    terminal_sql.execute("SELECT nomes FROM Produtos WHERE nomes = ?", (nome_produto,))
+    dados_nome = str(terminal_sql.fetchall()).strip("()[]'',")
+    terminal_sql.execute("SELECT quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
+    dados_quantidade = str(terminal_sql.fetchall()).strip("()[]',")
+    BD.close()
+    
     nome_ent.delete(0, "end")
-    nome_ent.insert(0,dados_produto)
+    nome_ent.insert(0, f"{dados_nome}, {dados_quantidade} Itens em estoque")
         
     BD.close()
 
@@ -498,6 +507,8 @@ def delete_itens_entrada(linhas_entrada, botoes_entrada):
     linhas_entrada.destroy()
     botoes_entrada.destroy()
 
+
+criar_banco()
 ##----------------------------------------------------------configuração da janela--------------------------------------------------------------------##
 customtkinter.set_appearance_mode('dark')
 customtkinter.set_default_color_theme('blue')
@@ -506,7 +517,7 @@ janela =customtkinter.CTk()
 janela.title("Gerenciamento")
 janela.geometry('800x410')
 
-checkbox_anterior = customtkinter.BooleanVar()  # Armazena o checkbox atualmente selecionado
+checkbox_anterior = customtkinter.StringVar()
 
 style = ttk.Style(master=janela)
 style.theme_use('clam')
