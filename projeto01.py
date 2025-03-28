@@ -10,12 +10,12 @@ file_path = os.path.dirname(os.path.realpath(__file__))
 image = Image.open(file_path + "/lixeira 1.png")
 image = image.resize((25,25))
 image1 = customtkinter.CTkImage(image)
-item_vet = 0
+item_quantidade = []
 linha_entrada = 0
 linha_saida = 0
 item_selecionado = None
-var_nome = None
 checkbox_anterior = None
+nome_item_vet_entrada = []
  
 def tela_cadastro():
     quadro_cadastro.grid(row=0 , column=1, pady=5, padx=5)
@@ -346,10 +346,6 @@ def dados_saida():
     BD.close()
     
 
-
-def limpar_campos_saida():
-    nome_saida.delete(0, "end")
-
 def checkbox_event_saida(nome_produto, var_checkbox):
     global item_selecionado, checkbox_anterior
     
@@ -381,6 +377,10 @@ def preencher_campos_saida(nome_produto):
     nome_saida.insert(0, f"{dados_nome} - {dados_quantidade} Itens em estoque")
 
 
+def limpar_campos_saida():
+    nome_saida.delete(0, "end")
+
+
 def pesquisar_produto_saida(event=None):
     global item_selecionado, checkbox_selecionado
     var_nomes = pesquisar_saida.get()
@@ -405,17 +405,13 @@ def adicionar_item_saida():
     try :  
         label_saida = customtkinter.CTkLabel(rolagem_saida_selecao_itens, text=item_vet_saida)            
         label_saida.grid(row=linha_saida, column=0, pady=5, padx=5, sticky = "w")    
-        lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=image, command=lambda: delete_itens_saida(label_saida, lixeira_saida))
+        lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_saida(label_saida, lixeira_saida))
         lixeira_saida.grid(row=linha_saida, column=1, pady=5, padx=100, sticky = "e")
  
     except ValueError:
         return  
 
 def salvar_saida():
-    BD = sqlite3.connect("BD_GRE.db")
-    terminal_sql = BD.cursor()
-    terminal_sql.execute("SELECT quantidade FROM Produtos WHERE nomes = ?", (nome_saida.get(),))
-    quantidade_da_saida = terminal_sql.fetchall()
     pass
 
 def cancelar_saida():
@@ -469,15 +465,14 @@ def checkbox_event_entrada(nome_produto, var_checkbox):
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("SELECT nomes FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_nome = str(terminal_sql.fetchall()).strip("()[]'',")
-    terminal_sql.execute("SELECT quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_quantidade = str(terminal_sql.fetchall()).strip("()[]',")
+    terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
+    dados_nome = terminal_sql.fetchone()
     BD.close()
-    
     nome_ent.delete(0, "end")
-    nome_ent.insert(0, f"{dados_nome}, {dados_quantidade} Itens em estoque")
-        
+    nome_ent.insert(0, f'{dados_nome[0]}')
+
+    quant_estoque_entrada.delete(0, "end")
+    quant_estoque_entrada.insert(0, f'{dados_nome[1]}')           
     BD.close()
 
 def limpar_campos_entrada():
@@ -501,17 +496,43 @@ def pesquisar_produto_entrada(event=None):
 
 def adicionar_item_entrada():  
     global linha_entrada
+    nome_item_var = (nome_ent.get())
+   
+    if nome_item_var in nome_item_vet_entrada:
+        messagebox.showerror("ERROR", "Nome já existe!!")
+    
+
+
+    else:
+
+        try :  
+            label_entrada = customtkinter.CTkLabel(rolagem_entrada_selecao_itens, text=item_vet_entrada)            
+            label_entrada.grid(row=linha_entrada, column=0, pady=5, padx=5, sticky = "w")    
+            lixeira_entrada = customtkinter.CTkButton(rolagem_entrada_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_entrada(label_entrada, lixeira_entrada, nome_item_var))
+            lixeira_entrada.grid(row=linha_entrada, column=1, pady=5, padx=100, sticky = "e")
+
+        except ValueError:
+            return
+    item_quantidade.append(quant_entrada.get())
+    nome_item_vet_entrada.append(nome_ent.get())
     item_vet_entrada = str(nome_ent.get())
     linha_entrada += 1
-    try :  
-        label_entrada = customtkinter.CTkLabel(rolagem_entrada_selecao_itens, text=item_vet_entrada)            
-        label_entrada.grid(row=linha_entrada, column=0, pady=5, padx=5, sticky = "w")    
-        lixeira_entrada = customtkinter.CTkButton(rolagem_entrada_selecao_itens, width=35, height=35, text="", image=image, command=lambda: delete_itens_entrada(label_entrada, lixeira_entrada))
-        lixeira_entrada.grid(row=linha_entrada, column=1, pady=5, padx=100, sticky = "e")
- 
-    except ValueError:
-        return
+
+
+def delete_itens_entrada(linhas_entrada, botoes_entrada, nome_entrada):
+    if nome_entrada in nome_item_vet_entrada:
+        casa_nome = nome_item_vet_entrada.index(nome_entrada)   
+        del nome_item_vet_entrada[casa_nome]
+        del item_quantidade[casa_nome]
+
     
+    linhas_entrada.destroy()
+    botoes_entrada.destroy()
+
+def salvar_entrada():
+    pass
+
+
 
 def cancelar_entrada():
     global linha_entrada
@@ -521,9 +542,8 @@ def cancelar_entrada():
     for item in rolagem_entrada_selecao_itens.winfo_children():
         item.destroy()
 
-def delete_itens_entrada(linhas_entrada, botoes_entrada):
-    linhas_entrada.destroy()
-    botoes_entrada.destroy()
+
+
 
 
 criar_banco()
@@ -688,11 +708,11 @@ pesquisar_saida.grid(row=1, column=0, rowspan=3, padx=5, sticky="s")
 pesquisar_saida.bind("<KeyRelease>", pesquisar_produto_saida)
 
 ##---------------------------------------------------------------------------entradas da saída--------------------------------------------------------------------##
-nome_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="nome", placeholder_text_color="#8684EB", width=300, border_color="#83A2EB", border_width=2 )
+nome_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="nome", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
 nome_saida.grid(row=3, column=1, pady=2, padx=5, sticky="w")
  
-nome_quant_estoque = customtkinter.CTkLabel(quadro_saida, text="produtos em estoque: 1")
-nome_quant_estoque.grid(row=2, column=1, padx=5, sticky="n")
+quant_estoque_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2)
+quant_estoque_saida.grid(row=1, column=2, padx=5 ,pady=5 , sticky="n")
  
 quant_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
 quant_saida.grid(row=4,column=1, pady=2, padx=5, sticky="w")
@@ -703,7 +723,7 @@ botao_add_item_saida = customtkinter.CTkButton(quadro_saida, text="Adicionar ite
 botao_add_item_saida.grid(row=4, column=1, columnspan=2, pady=6, sticky="e") 
  
 botao_cancel_saida = customtkinter.CTkButton(quadro_saida, text="Cancelar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
-botao_cancel_saida.grid(row=6, column=1, padx=1, sticky="n")
+botao_cancel_saida.grid(row=6, column=2, padx=1, sticky="n")
  
 botao_salvar_saida = customtkinter.CTkButton(quadro_saida, text="Salvar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
 botao_salvar_saida.grid(row=6, column=1, padx=1, sticky="w")
@@ -730,11 +750,11 @@ pesquisar_entrada.grid(row=1, column=0, rowspan=3, padx=5, sticky="s")
 pesquisar_entrada.bind("<KeyRelease>", pesquisar_produto_entrada)
 
 ##-----------------------------------------------------------------------entradas da entrada--------------------------------------------------------------------##
-nome_ent = customtkinter.CTkEntry(quadro_entrada, placeholder_text="nome", placeholder_text_color="#8684EB", width=300, border_color="#83A2EB", border_width=2 )
-nome_ent.grid(row=3, column=1,pady=2 , padx=5, sticky="w")
+nome_ent = customtkinter.CTkEntry(quadro_entrada, placeholder_text="nome", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
+nome_ent.grid(row=3, column=1,pady=5, padx=5, sticky="w")
 
-nome_quant_estoque_entrada = customtkinter.CTkLabel(quadro_entrada, text="produtos em estoque: 1")
-nome_quant_estoque_entrada.grid(row=2, column=1, padx=5, sticky="n")
+quant_estoque_entrada = customtkinter.CTkEntry(quadro_entrada, placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2)
+quant_estoque_entrada.grid(row=3, column=2, padx=5, pady=5, sticky="e")
 
 quant_entrada = customtkinter.CTkEntry(quadro_entrada, placeholder_text="00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
 quant_entrada.grid(row=4,column=1,pady=2 , padx=5, sticky="w")
@@ -744,7 +764,7 @@ botao_add_item_entrada = customtkinter.CTkButton(quadro_entrada, text="Adicionar
 botao_add_item_entrada.grid(row=4, column=1, columnspan=2, padx= 6,sticky="e")
  
 botao_cancel_entrada = customtkinter.CTkButton(quadro_entrada, text="Cancelar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
-botao_cancel_entrada.grid(row=6, column=1, padx=1, sticky="n")
+botao_cancel_entrada.grid(row=6, column=2, padx=1, sticky="n")
  
 botao_salvar_entrada = customtkinter.CTkButton(quadro_entrada, text="Salvar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
 botao_salvar_entrada.grid(row=6, column=1, padx=1, sticky="w")
