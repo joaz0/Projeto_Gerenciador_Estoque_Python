@@ -7,12 +7,15 @@ import sqlite3
 
  
 file_path = os.path.dirname(os.path.realpath(__file__))
-imagem1 = customtkinter.CTkImage(Image.open(fp="C:/Users/joazr/Downloads/Projetos_senac/lixeira/lixeira 1.png"), size=(35,35))
+image = Image.open(file_path + "/lixeira 1.png")
+image = image.resize((25,25))
+image1 = customtkinter.CTkImage(image)
 item_vet = 0
 linha_entrada = 0
 linha_saida = 0
 item_selecionado = None
 var_nome = None
+checkbox_anterior = None
  
 def tela_cadastro():
     quadro_cadastro.grid(row=0 , column=1, pady=5, padx=5)
@@ -227,8 +230,11 @@ def dados_edicao():
     BD.close()
 
 def checkbox_event_edicao(nome_produto, var_checkbox):
-    global checkbox_anterior
-
+    global item_selecionado, checkbox_anterior
+    item_selecionado = nome_produto
+    BD = sqlite3.connect("BD_GRE.db")
+    terminal_sql = BD.cursor()
+    terminal_sql.execute("SELECT nomes, precos, desc FROM Produtos WHERE nomes = ?", (nome_produto,))
     if checkbox_anterior != var_checkbox:
         preencher_campos_edicao(nome_produto)
         if checkbox_anterior is not None:
@@ -237,8 +243,7 @@ def checkbox_event_edicao(nome_produto, var_checkbox):
     else:
         checkbox_anterior = var_checkbox
         preencher_campos_edicao(nome_produto)
-    
-
+        
 
 def preencher_campos_edicao(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
@@ -261,15 +266,17 @@ def limpar_campos_edicao():
     editar_nome.delete(0, "end")
     editar_preco.delete(0, "end")
     editar_desc.delete("1.0", "end")
+    
 
+    
 def salvar_edicao():
-    global item_selecionado
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     nome_edit = editar_nome.get()
     preco_edit = editar_preco.get()
     desc_edit = editar_desc.get("1.0", "end")
-    terminal_sql.execute("UPDATE Produtos SET nomes = ?, precos = ?, desc = ? WHERE nomes = ?", (nome_edit, preco_edit, desc_edit, item_selecionado))
+    nome_original = item_selecionado
+    terminal_sql.execute("UPDATE Produtos SET nomes = ?, precos = ?, desc = ? WHERE nomes = ?", (nome_edit, preco_edit, desc_edit, nome_original))
     BD.commit()
     BD.close()
     editar_nome.delete(0, "end")
@@ -278,7 +285,7 @@ def salvar_edicao():
 
     dados_edicao()
     ler_dados_cadastro()
-    item_selecionado = None
+
         
 def cancelar_edicao():
     limpar_campos_edicao()
@@ -312,9 +319,10 @@ def pesquisar_produto_edicao(event=None):
         item.destroy()
 
     for item in recebe_pesquisa:
+        nome_produto = item[0]
         var_checkbox = customtkinter.BooleanVar(value=False)
 
-        Box_edicao = customtkinter.CTkCheckBox(rolagem_edicao, text=item[0], text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=item[0], v=var_checkbox: checkbox_event_edicao(n, v))
+        Box_edicao = customtkinter.CTkCheckBox(rolagem_edicao, text=item[0], text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_edicao(n, v))
         Box_edicao.pack(pady=5, padx=5, fill="x")
     BD.close()
 
@@ -331,27 +339,34 @@ def dados_saida():
         nome_produto = item[0]
 
 
-        var_checkbox = customtkinter.BooleanVar(value=False)
+        var_checkbox = customtkinter.BooleanVar(None)
 
-        Box = customtkinter.CTkCheckBox(rolagem_saida_checkbox, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_saida(n, v))
-        Box.pack(pady=5, padx=5, fill="x")
+        box_saida = customtkinter.CTkCheckBox(rolagem_saida_checkbox, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_saida(n, v))
+        box_saida.pack(pady=5, padx=5, fill="x")
     BD.close()
+    
+
+
+def limpar_campos_saida():
+    nome_saida.delete(0, "end")
 
 def checkbox_event_saida(nome_produto, var_checkbox):
-    global checkbox_anterior
-
-    if checkbox_anterior != var_checkbox:
+    global item_selecionado, checkbox_anterior
+    
+    if var_checkbox.get() == True:
+        
+        if checkbox_anterior is not None and checkbox_anterior != var_checkbox:
+             checkbox_anterior.set(0)
         preencher_campos_saida(nome_produto)
-
-        if checkbox_anterior is not None:
-            checkbox_anterior.set(0)
-            nome_saida.configure(state='normal')
-            checkbox_anterior = var_checkbox
+        item_selecionado = nome_produto
+        checkbox_anterior = var_checkbox
+        
     else:
-        nome_saida.configure(state='normal')
-        preencher_campos_saida(nome_produto)
-        checkbox_anterior.set(0)
-
+        if checkbox_anterior == var_checkbox:
+            limpar_campos_saida() 
+            item_selecionado = None
+            checkbox_anterior = None
+ 
 
 def preencher_campos_saida(nome_produto):
     global nome_saida
@@ -362,12 +377,9 @@ def preencher_campos_saida(nome_produto):
     terminal_sql.execute("SELECT quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
     dados_quantidade = str(terminal_sql.fetchall()).strip("()[]',")
     BD.close()
-    
     nome_saida.delete(0, "end")
     nome_saida.insert(0, f"{dados_nome} - {dados_quantidade} Itens em estoque")
-    
-def limpar_campos_saida():
-    nome_saida.delete(0, "end")
+
 
 def pesquisar_produto_saida(event=None):
     global item_selecionado, checkbox_selecionado
@@ -393,7 +405,7 @@ def adicionar_item_saida():
     try :  
         label_saida = customtkinter.CTkLabel(rolagem_saida_selecao_itens, text=item_vet_saida)            
         label_saida.grid(row=linha_saida, column=0, pady=5, padx=5, sticky = "w")    
-        lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=imagem1, command=lambda: delete_itens_saida(label_saida, lixeira_saida))
+        lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=image, command=lambda: delete_itens_saida(label_saida, lixeira_saida))
         lixeira_saida.grid(row=linha_saida, column=1, pady=5, padx=100, sticky = "e")
  
     except ValueError:
@@ -436,16 +448,23 @@ def dados_entrada():
     BD.close()
 
 def checkbox_event_entrada(nome_produto, var_checkbox):
-    global checkbox_anterior
-    if checkbox_anterior != var_checkbox:
+    global item_selecionado, checkbox_anterior
+    
+    if var_checkbox.get() == True:
+        
+        if checkbox_anterior is not None and checkbox_anterior != var_checkbox:
+             checkbox_anterior.set(0)
         preencher_campos_entrada(nome_produto)
-        if checkbox_anterior is not None:
-            checkbox_anterior.set(0)
-            checkbox_anterior = var_checkbox
-    else:
+        item_selecionado = nome_produto
         checkbox_anterior = var_checkbox
-        preencher_campos_entrada(nome_produto)
+    
 
+    else:
+        if checkbox_anterior == var_checkbox:
+            limpar_campos_entrada() 
+            item_selecionado = None
+            checkbox_anterior = None
+ 
 
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
@@ -463,8 +482,7 @@ def preencher_campos_entrada(nome_produto):
 
 def limpar_campos_entrada():
     nome_ent.delete(0, "end")
-    quant_entrada.delete(0, "end")
-
+    
 def pesquisar_produto_entrada(event=None):
     global item_selecionado, checkbox_selecionado
     var_nomes = pesquisar_entrada.get()
@@ -477,8 +495,8 @@ def pesquisar_produto_entrada(event=None):
 
     for item in recebe_pesquisa:
         item_selecionado = item[0]
-        box_saida = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=item, text_color ="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=checkbox_selecionado, command=lambda n=item, v=checkbox_selecionado: checkbox_event_entrada(n, v))
-        box_saida.pack(pady=5, padx=5, fill="x")
+        box_entrada = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=item, text_color ="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=checkbox_selecionado, command=lambda n=item, v=checkbox_selecionado: checkbox_event_entrada(n, v))
+        box_entrada.pack(pady=5, padx=5, fill="x")
     BD.close()
 
 def adicionar_item_entrada():  
@@ -488,7 +506,7 @@ def adicionar_item_entrada():
     try :  
         label_entrada = customtkinter.CTkLabel(rolagem_entrada_selecao_itens, text=item_vet_entrada)            
         label_entrada.grid(row=linha_entrada, column=0, pady=5, padx=5, sticky = "w")    
-        lixeira_entrada = customtkinter.CTkButton(rolagem_entrada_selecao_itens, width=35, height=35, text="", image=imagem1, command=lambda: delete_itens_entrada(label_entrada, lixeira_entrada))
+        lixeira_entrada = customtkinter.CTkButton(rolagem_entrada_selecao_itens, width=35, height=35, text="", image=image, command=lambda: delete_itens_entrada(label_entrada, lixeira_entrada))
         lixeira_entrada.grid(row=linha_entrada, column=1, pady=5, padx=100, sticky = "e")
  
     except ValueError:
@@ -516,8 +534,6 @@ customtkinter.set_default_color_theme('blue')
 janela =customtkinter.CTk()
 janela.title("Gerenciamento")
 janela.geometry('800x410')
-
-checkbox_anterior = customtkinter.StringVar()
 
 style = ttk.Style(master=janela)
 style.theme_use('clam')
