@@ -86,8 +86,6 @@ Acompanhe seu estoque através dos relatórios
 
 Exporte os dados quando necessário
 
-## 📝 Licença
-Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
 
 ## 🤝 Contribuição
 Contribuições são bem-vindas! Siga estes passos:
@@ -110,3 +108,6 @@ Email: joazrodrigues21@gmail.com
 Issues: GitHub Issues
 
 Desenvolvido com ❤️ por [Joaz Rodrigues - 2025]
+
+## 📝 Licença
+Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
