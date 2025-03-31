@@ -538,7 +538,7 @@ def adicionar_item_entrada():
     label_entrada.grid(row=linha_entrada, column=0, pady=5, padx=5, sticky = "w")    
     lixeira_entrada = customtkinter.CTkButton(rolagem_entrada_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_entrada(label_entrada, lixeira_entrada, nome_item))
     lixeira_entrada.grid(row=linha_entrada, column=1, pady=5, padx=100, sticky = "e")
-    
+
 
 def delete_itens_entrada(linhas_entrada, botoes_entrada, nome_entrada):
     if nome_entrada in nome_item_vet_entrada:
@@ -553,8 +553,6 @@ def delete_itens_entrada(linhas_entrada, botoes_entrada, nome_entrada):
 def salvar_entrada():
     pass
 
-
-
 def cancelar_entrada():
     global linha_entrada
     linha_entrada = 0
@@ -562,10 +560,6 @@ def cancelar_entrada():
     quant_entrada.delete(0, "end")
     for item in rolagem_entrada_selecao_itens.winfo_children():
         item.destroy()
-
-
-
-
 
 criar_banco()
 ##----------------------------------------------------------configuração da janela--------------------------------------------------------------------##
