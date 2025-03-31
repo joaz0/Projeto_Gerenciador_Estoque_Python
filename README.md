@@ -52,26 +52,28 @@ python main.py
 Screenshots
 Tela de Cadastro	Tela de Edição	Relatório de Estoque
 Cadastro	Edição	Saida Entrada Estoque
-  ![Tela_cadastro]
+
+## Tela_cadastro
 <div>
   
   ![Tela_cadastro](https://github.com/user-attachments/assets/16f94a41-384a-462d-866a-961ba14bfc76)
 </div>
-![Tela_edicao]
+## Tela_edicao
 <div>
   
   ![Tela_edicao](https://github.com/user-attachments/assets/a73976d0-d218-46d1-9edc-83dab39996e8)
 </div>
+## Tela_entrada
 <div>
   
   ![Tela_saida](https://github.com/user-attachments/assets/9ef58905-1a96-4da8-9d7e-fd90b6367f3d)
 </div>
-
+## Tela_saida
 <div>
   
   ![Tela_entrada](https://github.com/user-attachments/assets/406d7a35-d457-4590-a75f-1641ef39752c)
 </div>
-
+## Tela_relatorio_estoque
 <div>
   
   ![Tela_relatorio_estoque](https://github.com/user-attachments/assets/ddddd50d-2599-44bb-afd9-11aa708fdf0b)
