@@ -425,7 +425,6 @@ def adicionar_item_saida():
     btn_lixeira = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_saida(label_item, btn_lixeira, nome_item))
     btn_lixeira.grid(row=linha_saida, column=1, pady=5, padx=100, sticky="e")
 
-
 def delete_itens_saida(label, botao, nome_item):
     if nome_item in itens_adicionados_saida:
         itens_adicionados_saida.remove(nome_item)
@@ -441,8 +440,7 @@ def cancelar_saida():
     nome_saida.delete(0, "end")
     quant_saida.delete(0, "end")
     for item in rolagem_saida_selecao_itens.winfo_children():
-        item.destroy()
-        
+        item.destroy()       
 
 ##--------------------------------------------------------------------------comandos Entrada------------------------------------------------------------------##
 def dados_entrada():
@@ -478,7 +476,6 @@ def checkbox_event_entrada(nome_produto, var_checkbox):
             limpar_campos_entrada() 
             item_selecionado = None
             checkbox_anterior = None
- 
 
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
@@ -493,10 +490,8 @@ def preencher_campos_entrada(nome_produto):
     quant_estoque_entrada.insert(0, f'{dados_nome[1]}')           
     BD.close()
 
-
 def limpar_campos_entrada():
     nome_ent.delete(0, "end")
-
 
 def pesquisar_produto_entrada(event=None):
     global item_selecionado, checkbox_selecionado
