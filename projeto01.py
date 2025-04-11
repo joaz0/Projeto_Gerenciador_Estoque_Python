@@ -362,15 +362,21 @@ def checkbox_event_saida(nome_produto, var_checkbox):
             checkbox_anterior = None
  
 def preencher_campos_saida(nome_produto):
-    global nome_saida
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
     dados_nome = terminal_sql.fetchone()
 
+    terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
+    dados_nome = terminal_sql.fetchone()
+    BD.close()
     nome_saida.delete(0, "end")
     nome_saida.insert(0, f'{dados_nome[0]}')
+    nome_saida.insert(0, f'{dados_nome[0]}')
 
+    quant_estoque_saida.delete(0, "end")
+    quant_estoque_saida.insert(0, f'{dados_nome[1]}')           
+    BD.close()
     quant_estoque_saida.delete(0, "end")
     quant_estoque_saida.insert(0, f'{dados_nome[1]}')           
     BD.close()
@@ -395,6 +401,9 @@ def pesquisar_produto_saida(event=None):
         box_saida = customtkinter.CTkCheckBox(rolagem_saida_checkbox, text=item[0], text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=item[0], v=var_checkbox: checkbox_event_saida(n, v))
         box_saida.pack(pady=5, padx=5, fill="x")
     BD.close()
+    
+    
+itens_adicionados_saida = []
 
 def adicionar_item_saida():
     global linha_saida
@@ -415,6 +424,33 @@ def adicionar_item_saida():
     nome_saida.delete(0, "end")
     quant_saida.delete(0, "end")
     quant_estoque_saida.delete("0", "end")
+    
+    nome_item = nome_saida.get()
+    quantidade = quant_saida.get()
+    
+    if not nome_item or not quantidade:
+        messagebox.showerror("Erro", "Preencha todos os campos!")
+        return
+    
+    if nome_item in itens_adicionados_saida:
+        messagebox.showerror("Erro", "Este item já está na lista!")
+        return
+    
+    itens_adicionados_saida.append(nome_item)
+    linha_saida += 1
+
+    texto_item = f"{nome_item} - {quantidade}"
+
+    label_item = customtkinter.CTkLabel(rolagem_saida_selecao_itens, text=texto_item)
+    label_item.grid(row=linha_saida, column=0, pady=5, padx=5, sticky="w")
+    btn_lixeira = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_saida(label_item, btn_lixeira, nome_item))
+    btn_lixeira.grid(row=linha_saida, column=1, pady=5, padx=100, sticky="e")
+
+def delete_itens_saida(label, botao, nome_item):
+    if nome_item in itens_adicionados_saida:
+        itens_adicionados_saida.remove(nome_item)
+    label.destroy()
+    botao.destroy()
 
 def salvar_saida():
     global quant_anterior_estoque_saida, nome_item_vet_saida, item_quantidade
@@ -443,7 +479,7 @@ def cancelar_saida():
     nome_saida.delete(0, "end")
     quant_saida.delete(0, "end")
     for item in rolagem_saida_selecao_itens.winfo_children():
-        item.destroy()
+        item.destroy()       
 
 def delete_itens_saida(linhas, botoes):
     if nome_saida in nome_item_vet_entrada:
@@ -504,6 +540,7 @@ def limpar_campos_entrada():
     nome_ent.delete(0, "end")
     quant_estoque_entrada.delete(0, "end")
     
+
 def pesquisar_produto_entrada(event=None):
     global item_selecionado
     var_nomes = pesquisar_entrada.get()
@@ -520,6 +557,8 @@ def pesquisar_produto_entrada(event=None):
         box_entrada = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=item, text_color ="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=item, v=var_checkbox: checkbox_event_entrada(n, v))
         box_entrada.pack(pady=5, padx=5, fill="x")
     BD.close()
+
+itens_adicionados_entrada = []
 
 def adicionar_item_entrada():  
     global linha_entrada
@@ -542,6 +581,27 @@ def adicionar_item_entrada():
     nome_ent.delete(0, "end")
     quant_entrada.delete(0, "end")
     quant_estoque_entrada.delete("0", "end")
+    nome_item = nome_ent.get()
+    quantidade = quant_entrada.get()
+    
+    if not nome_item or not quantidade:
+        messagebox.showerror("Erro", "Preencha todos os campos!")
+        return
+    
+    if nome_item in itens_adicionados_entrada:
+        messagebox.showerror("Erro", "Este item já está na lista!")
+        return
+    
+    itens_adicionados_entrada.append(nome_item)
+    linha_entrada += 1
+
+    texto_item = f"{nome_item} - {quantidade}"
+
+    label_entrada = customtkinter.CTkLabel(rolagem_entrada_selecao_itens, text=texto_item)            
+    label_entrada.grid(row=linha_entrada, column=0, pady=5, padx=5, sticky = "w")    
+    lixeira_entrada = customtkinter.CTkButton(rolagem_entrada_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_entrada(label_entrada, lixeira_entrada, nome_item))
+    lixeira_entrada.grid(row=linha_entrada, column=1, pady=5, padx=100, sticky = "e")
+
 
 def delete_itens_entrada(linhas_entrada, botoes_entrada, nome_entrada):
     if nome_entrada in nome_item_vet_entrada:
@@ -575,6 +635,8 @@ def salvar_entrada():
     quant_entrada.delete(0, "end")
     quant_estoque_entrada.delete(0, "end")
     nome_item_vet_entrada.clear()
+
+    pass
 
 def cancelar_entrada():
     global linha_entrada
@@ -752,6 +814,7 @@ nome_saida.grid(row=3, column=1, pady=2, padx=5, sticky="w")
  
 quant_estoque_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2)
 quant_estoque_saida.grid(row=3, column=2, padx=5 ,pady=5 , sticky="n")
+quant_estoque_saida.grid(row=3, column=2, padx=5, pady=5, sticky="e")
  
 quant_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
 quant_saida.grid(row=4,column=1, pady=2, padx=5, sticky="w")
