@@ -8,6 +8,6 @@ name = 'v'
 l1.index(name)
 
 
-
-print(l2[1])
+for i in l1:
+    print(l1[i])
 

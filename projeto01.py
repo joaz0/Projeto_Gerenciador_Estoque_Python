@@ -16,6 +16,9 @@ linha_saida = 0
 item_selecionado = None
 checkbox_anterior = None
 nome_item_vet_entrada = []
+nome_item_vet_saida = []
+quant_anterior_estoque_ent = []
+quant_anterior_estoque_saida = []
  
 def tela_cadastro():
     quadro_cadastro.grid(row=0 , column=1, pady=5, padx=5)
@@ -172,19 +175,15 @@ def export():
 def criar_banco():
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("CREATE TABLE IF NOT EXISTS Produtos (nomes text, quantidade integer, precos real, desc text)")
+    terminal_sql.execute("CREATE TABLE IF NOT EXISTS Produtos (nomes text, quantidade int, precos real, desc text)")
     BD.commit()
     BD.close()
 
 ##--------------------------------------------------------------------------Comandos Cadastro------------------------------------------------------------------##
 def salvar_cadastro():
     BD = sqlite3.connect("BD_GRE.db")
-    nome_cadastro = entrada_nome_produto.get()
-    preco_cadastro = entrada_preco.get()
-    quant_cadastro = "0"
-    desc_cadastro = textbox_desc.get("1.0", "end")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("INSERT INTO produtos VALUES ('"+nome_cadastro+"', '"+quant_cadastro+"', '"+preco_cadastro+"', '"+desc_cadastro+"')")
+    terminal_sql.execute("INSERT INTO produtos (nomes, quantidade ,precos, desc) VALUES (?,?,?,?)", (entrada_nome_produto.get(), 0, entrada_preco.get(), textbox_desc.get('1.0', 'end')))
     entrada_nome_produto.delete(0, "end")
     entrada_preco.delete(0, "end")
     textbox_desc.delete("1.0", "end")
@@ -235,15 +234,19 @@ def checkbox_event_edicao(nome_produto, var_checkbox):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     terminal_sql.execute("SELECT nomes, precos, desc FROM Produtos WHERE nomes = ?", (nome_produto,))
-    if checkbox_anterior != var_checkbox:
-        preencher_campos_edicao(nome_produto)
-        if checkbox_anterior is not None:
-            checkbox_anterior.set(0)
-            checkbox_anterior = var_checkbox
-    else:
-        checkbox_anterior = var_checkbox
-        preencher_campos_edicao(nome_produto)
+    if var_checkbox.get() == True:
         
+        if checkbox_anterior is not None and checkbox_anterior != var_checkbox:
+            checkbox_anterior.set(0)
+        preencher_campos_edicao(nome_produto)
+        item_selecionado = nome_produto
+        checkbox_anterior = var_checkbox
+
+    else:
+        if checkbox_anterior == var_checkbox:
+            limpar_campos_edicao() 
+            item_selecionado = None
+            checkbox_anterior = None       
 
 def preencher_campos_edicao(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
@@ -267,8 +270,6 @@ def limpar_campos_edicao():
     editar_preco.delete(0, "end")
     editar_desc.delete("1.0", "end")
     
-
-    
 def salvar_edicao():
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
@@ -286,10 +287,9 @@ def salvar_edicao():
     dados_edicao()
     ler_dados_cadastro()
 
-        
 def cancelar_edicao():
     limpar_campos_edicao()
-
+    checkbox_anterior.set(0)
 
 def deletar_edicao():
     global item_selecionado
@@ -306,7 +306,6 @@ def deletar_edicao():
         dados_edicao()
         ler_dados_cadastro()
         item_selecionado = None
-
 
 def pesquisar_produto_edicao(event=None):
     global item_selecionado
@@ -345,7 +344,6 @@ def dados_saida():
         box_saida.pack(pady=5, padx=5, fill="x")
     BD.close()
     
-
 def checkbox_event_saida(nome_produto, var_checkbox):
     global item_selecionado, checkbox_anterior
     
@@ -363,26 +361,26 @@ def checkbox_event_saida(nome_produto, var_checkbox):
             item_selecionado = None
             checkbox_anterior = None
  
-
 def preencher_campos_saida(nome_produto):
     global nome_saida
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
-    terminal_sql.execute("SELECT nomes FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_nome = str(terminal_sql.fetchall()).strip("()[]'',")
-    terminal_sql.execute("SELECT quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
-    dados_quantidade = str(terminal_sql.fetchall()).strip("()[]',")
-    BD.close()
-    nome_saida.delete(0, "end")
-    nome_saida.insert(0, f"{dados_nome} - {dados_quantidade} Itens em estoque")
+    terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
+    dados_nome = terminal_sql.fetchone()
 
+    nome_saida.delete(0, "end")
+    nome_saida.insert(0, f'{dados_nome[0]}')
+
+    quant_estoque_saida.delete(0, "end")
+    quant_estoque_saida.insert(0, f'{dados_nome[1]}')           
+    BD.close()
 
 def limpar_campos_saida():
     nome_saida.delete(0, "end")
-
+    quant_estoque_saida.delete(0, "end")
 
 def pesquisar_produto_saida(event=None):
-    global item_selecionado, checkbox_selecionado
+    global item_selecionado
     var_nomes = pesquisar_saida.get()
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
@@ -398,21 +396,46 @@ def pesquisar_produto_saida(event=None):
         box_saida.pack(pady=5, padx=5, fill="x")
     BD.close()
 
-def adicionar_item_saida():  
+def adicionar_item_saida():
     global linha_saida
-    item_vet_saida = str(nome_saida.get())
-    linha_saida += 1
-    try :  
-        label_saida = customtkinter.CTkLabel(rolagem_saida_selecao_itens, text=item_vet_saida)            
+    nome_item_var = str(nome_saida.get())
+    if nome_item_var in nome_item_vet_saida:
+        messagebox.showerror("ERROR", "Nome já existe!!")
+    else:
+        label_saida = customtkinter.CTkLabel(rolagem_saida_selecao_itens, text=nome_item_var)            
         label_saida.grid(row=linha_saida, column=0, pady=5, padx=5, sticky = "w")    
-        lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_saida(label_saida, lixeira_saida))
-        lixeira_saida.grid(row=linha_saida, column=1, pady=5, padx=100, sticky = "e")
- 
-    except ValueError:
-        return  
+        lixeira_saida = customtkinter.CTkButton(rolagem_saida_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_saida(label_saida, lixeira_saida, nome_item_var))
+        lixeira_saida.grid(row=linha_saida, column=1, pady=5, padx=100, sticky = "e")  
+
+
+    item_quantidade.append(int(quant_saida.get()))
+    nome_item_vet_saida.append(nome_saida.get())
+    quant_anterior_estoque_saida.append(int(quant_estoque_saida.get()))
+    linha_saida += 1
+    nome_saida.delete(0, "end")
+    quant_saida.delete(0, "end")
+    quant_estoque_saida.delete("0", "end")
 
 def salvar_saida():
-    pass
+    global quant_anterior_estoque_saida, nome_item_vet_saida, item_quantidade
+    BD = sqlite3.connect("BD_GRE.db")
+    terminal_sql = BD.cursor()
+    terminal_sql.execute("SELECT nomes FROM Produtos")
+    for item in (nome_item_vet_saida):
+        posicao = nome_item_vet_saida.index(item)
+        quant = item_quantidade[posicao] 
+        quant_ant = quant_anterior_estoque_saida[posicao]
+        quant = quant - quant_ant
+        terminal_sql.execute("UPDATE Produtos SET quantidade = ? WHERE nomes = ? ",(quant, item))
+
+    BD.commit()
+    BD.close()
+    for i in rolagem_saida_selecao_itens.winfo_children():
+        i.destroy()
+    nome_saida.delete(0, "end")
+    quant_saida.delete(0, "end")
+    quant_estoque_saida.delete(0, "end")
+    nome_item_vet_saida.clear()
 
 def cancelar_saida():
     global linha_saida
@@ -423,6 +446,10 @@ def cancelar_saida():
         item.destroy()
 
 def delete_itens_saida(linhas, botoes):
+    if nome_saida in nome_item_vet_entrada:
+        casa_nome = nome_item_vet_saida.index(nome_saida)   
+        del nome_item_vet_saida[casa_nome]
+        del item_quantidade[casa_nome]
     linhas.destroy()
     botoes.destroy()
 
@@ -438,7 +465,6 @@ def dados_entrada():
     for item in recebe_dados:
         nome_produto = item[0]
         var_checkbox = customtkinter.BooleanVar(value=False)
-
         Box_entrada = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=nome_produto, text_color="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=nome_produto, v=var_checkbox: checkbox_event_entrada(n, v))
         Box_entrada.pack(pady=5, padx=5, fill="x")
     BD.close()
@@ -460,14 +486,13 @@ def checkbox_event_entrada(nome_produto, var_checkbox):
             limpar_campos_entrada() 
             item_selecionado = None
             checkbox_anterior = None
- 
 
 def preencher_campos_entrada(nome_produto):
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
     terminal_sql.execute("SELECT nomes, quantidade FROM Produtos WHERE nomes = ?", (nome_produto,))
     dados_nome = terminal_sql.fetchone()
-    BD.close()
+    
     nome_ent.delete(0, "end")
     nome_ent.insert(0, f'{dados_nome[0]}')
 
@@ -477,9 +502,10 @@ def preencher_campos_entrada(nome_produto):
 
 def limpar_campos_entrada():
     nome_ent.delete(0, "end")
+    quant_estoque_entrada.delete(0, "end")
     
 def pesquisar_produto_entrada(event=None):
-    global item_selecionado, checkbox_selecionado
+    global item_selecionado
     var_nomes = pesquisar_entrada.get()
     BD = sqlite3.connect("BD_GRE.db")
     terminal_sql = BD.cursor()
@@ -490,49 +516,65 @@ def pesquisar_produto_entrada(event=None):
 
     for item in recebe_pesquisa:
         item_selecionado = item[0]
-        box_entrada = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=item, text_color ="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=checkbox_selecionado, command=lambda n=item, v=checkbox_selecionado: checkbox_event_entrada(n, v))
+        var_checkbox = customtkinter.BooleanVar(value=False)
+        box_entrada = customtkinter.CTkCheckBox(rolagem_entrada_checkbox, text=item, text_color ="#8684EB", checkmark_color="#83A2EB", border_color="#83A2EB", variable=var_checkbox, command=lambda n=item, v=var_checkbox: checkbox_event_entrada(n, v))
         box_entrada.pack(pady=5, padx=5, fill="x")
     BD.close()
 
 def adicionar_item_entrada():  
     global linha_entrada
-    nome_item_var = (nome_ent.get())
-   
+    nome_item_var = (nome_ent.get()) 
     if nome_item_var in nome_item_vet_entrada:
         messagebox.showerror("ERROR", "Nome já existe!!")
-    
-
-
     else:
-
         try :  
-            label_entrada = customtkinter.CTkLabel(rolagem_entrada_selecao_itens, text=item_vet_entrada)            
+            label_entrada = customtkinter.CTkLabel(rolagem_entrada_selecao_itens, text=nome_item_var)            
             label_entrada.grid(row=linha_entrada, column=0, pady=5, padx=5, sticky = "w")    
             lixeira_entrada = customtkinter.CTkButton(rolagem_entrada_selecao_itens, width=35, height=35, text="", image=image1, command=lambda: delete_itens_entrada(label_entrada, lixeira_entrada, nome_item_var))
             lixeira_entrada.grid(row=linha_entrada, column=1, pady=5, padx=100, sticky = "e")
-
+            
         except ValueError:
             return
-    item_quantidade.append(quant_entrada.get())
+    item_quantidade.append(int(quant_entrada.get()))
     nome_item_vet_entrada.append(nome_ent.get())
-    item_vet_entrada = str(nome_ent.get())
+    quant_anterior_estoque_ent.append(int(quant_estoque_entrada.get()))
     linha_entrada += 1
-
+    nome_ent.delete(0, "end")
+    quant_entrada.delete(0, "end")
+    quant_estoque_entrada.delete("0", "end")
 
 def delete_itens_entrada(linhas_entrada, botoes_entrada, nome_entrada):
     if nome_entrada in nome_item_vet_entrada:
         casa_nome = nome_item_vet_entrada.index(nome_entrada)   
         del nome_item_vet_entrada[casa_nome]
         del item_quantidade[casa_nome]
-
     
     linhas_entrada.destroy()
     botoes_entrada.destroy()
 
 def salvar_entrada():
-    pass
+    global quant_anterior_estoque_ent, nome_item_vet_entrada, item_quantidade
+    
+    BD = sqlite3.connect("BD_GRE.db")
+    terminal_sql = BD.cursor()
+    terminal_sql.execute("SELECT nomes FROM Produtos")
+    
+    for item in (nome_item_vet_entrada):
+        posicao = nome_item_vet_entrada.index(item)
+        quant = item_quantidade[posicao] 
+        quant_ant = quant_anterior_estoque_ent[posicao]
+        quant = quant + quant_ant
+        terminal_sql.execute("UPDATE Produtos SET quantidade = ? WHERE nomes = ? ",(quant, item))
 
+    BD.commit()
+    BD.close()
+    for i in rolagem_entrada_selecao_itens.winfo_children():
+        i.destroy()
 
+    nome_ent.delete(0, "end")
+    quant_entrada.delete(0, "end")
+    quant_estoque_entrada.delete(0, "end")
+    nome_item_vet_entrada.clear()
 
 def cancelar_entrada():
     global linha_entrada
@@ -541,9 +583,6 @@ def cancelar_entrada():
     quant_entrada.delete(0, "end")
     for item in rolagem_entrada_selecao_itens.winfo_children():
         item.destroy()
-
-
-
 
 
 criar_banco()
@@ -712,7 +751,7 @@ nome_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="nome", place
 nome_saida.grid(row=3, column=1, pady=2, padx=5, sticky="w")
  
 quant_estoque_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2)
-quant_estoque_saida.grid(row=1, column=2, padx=5 ,pady=5 , sticky="n")
+quant_estoque_saida.grid(row=3, column=2, padx=5 ,pady=5 , sticky="n")
  
 quant_saida = customtkinter.CTkEntry(quadro_saida, placeholder_text="00:", placeholder_text_color="#8684EB", width=100, border_color="#83A2EB", border_width=2 )
 quant_saida.grid(row=4,column=1, pady=2, padx=5, sticky="w")
@@ -725,7 +764,7 @@ botao_add_item_saida.grid(row=4, column=1, columnspan=2, pady=6, sticky="e")
 botao_cancel_saida = customtkinter.CTkButton(quadro_saida, text="Cancelar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
 botao_cancel_saida.grid(row=6, column=2, padx=1, sticky="n")
  
-botao_salvar_saida = customtkinter.CTkButton(quadro_saida, text="Salvar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
+botao_salvar_saida = customtkinter.CTkButton(quadro_saida, text="Salvar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30, command=salvar_saida)
 botao_salvar_saida.grid(row=6, column=1, padx=1, sticky="w")
 
 
@@ -736,8 +775,8 @@ rolagem_saida_selecao_itens.grid(row=5, column=1, columnspan=2, padx=5, sticky="
 ##-----------------------------------------------------------------------frame entrada-------------------------------------------------------------------##
 ##-----------------------------------------------------------------------label entrada--------------------------------------------------------------------##
  
-label_entrada = customtkinter.CTkLabel(quadro_entrada, text="Entrada de produtos", font=("arial",20,"bold"), text_color="#8684EB")
-label_entrada.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky ="n")
+label_principal_entrada = customtkinter.CTkLabel(quadro_entrada, text="Entrada de produtos", font=("arial",20,"bold"), text_color="#8684EB")
+label_principal_entrada.grid(row=0, column=0, columnspan=3, padx=5, pady=5, sticky ="n")
 
 ##-----------------------------------------------------------------------rolagem de itens entrada--------------------------------------------------------------------##
 
@@ -766,7 +805,7 @@ botao_add_item_entrada.grid(row=4, column=1, columnspan=2, padx= 6,sticky="e")
 botao_cancel_entrada = customtkinter.CTkButton(quadro_entrada, text="Cancelar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
 botao_cancel_entrada.grid(row=6, column=2, padx=1, sticky="n")
  
-botao_salvar_entrada = customtkinter.CTkButton(quadro_entrada, text="Salvar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30)
+botao_salvar_entrada = customtkinter.CTkButton(quadro_entrada, text="Salvar", text_color="black", width=100, fg_color="#83A2EB", corner_radius= 30, command=salvar_entrada)
 botao_salvar_entrada.grid(row=6, column=1, padx=1, sticky="w")
 
 ##-----------------------------------------------------------------------tabela de itens selecionados--------------------------------------------------------------------##
